@@ -28,5 +28,9 @@ int main(){
 	}
 	std::cout<<'\n';
 	
+	cudaFree(d_a);
+	cudaFree(d_b);
+	cudaFree(d_c);
+	
 	return 0;
 }
