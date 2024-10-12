@@ -13,6 +13,27 @@ __global__ void matrix_mul(float *A,float *B,float *C){
     }
 }
 
+__global__ void mat_mul_RowWise(float *A,float *B,float *C){
+    int r = blockIdx.x*blockDim.x+ threadIdx.x;
+    for(int c =0;c<WIDTH;c++){
+        int sum =0;
+        for(int k =0;k<WIDTH;k++){
+            sum +=A[r*WIDTH+k] * B[k*WIDTH + c];
+        }
+        C[r*WIDTH+c] = sum;
+    }
+}
+__global__ void mat_mul_colWise(float *A,float *B,float *C){
+    int c = blockIdx.x* blockDim.x + threadIdx.x;
+    for(int r =0;r<WIDTH;r++){
+        int sum =0;
+        for(int k =0;k<WIDTH;k++){
+            sum += A[r*WIDTH+k] * B[k*WIDTH + c];
+        }
+        C[r*WIDTH + c] = sum;
+    }
+}
+
 int main(){
     float *A,*B,*C;
     A = (float*)malloc(WIDTH*WIDTH*sizeof(float));
@@ -32,9 +53,12 @@ int main(){
 
     cudaMemcpy(d_A,A,WIDTH*WIDTH*sizeof(float),cudaMemcpyHostToDevice);
     cudaMemcpy(d_B,B,WIDTH*WIDTH*sizeof(float),cudaMemcpyHostToDevice);
-    dim3 dimBlock(16,16);
-    dim3 dimGrid(ceil(WIDTH/16.0),ceil(WIDTH/16.0));
-    matrix_mul<<<dimGrid,dimBlock>>>(d_A,d_B,d_C);
+    //dim3 dimBlock(16,16);
+    //dim3 dimGrid(ceil(WIDTH/16.0),ceil(WIDTH/16.0));
+    //matrix_mul<<<dimGrid,dimBlock>>>(d_A,d_B,d_C);
+    dim3 dimBlock(16);
+    dim3 dimGrid(ceil(WIDTH/16.0));
+    mat_mul_colWise<<<dimGrid,dimBlock>>>(d_A,d_B,d_C);
 
     cudaMemcpy(C,d_C,WIDTH*WIDTH*sizeof(float),cudaMemcpyDeviceToHost);
 
